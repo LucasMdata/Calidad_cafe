@@ -1,0 +1,268 @@
+https://www.kaggle.com/datasets/fatihb/coffee-quality-data-cqi
+
+
+CREATE TABLE STG CAFE (
+	sin_nombre varchar (255),
+	id varchar (255),
+	Pais varchar (255),
+	campo varchar (255),
+	numero_lote varchar (255),
+	molino varchar (255),
+	numero_ico varchar (255),
+	compania varchar (255),
+	altitud varchar (255),
+	region varchar (255),
+	productor varchar (255),
+	numero_de_bolsa varchar (255),
+	peso varchar (255),
+	pais_socio varchar (255),
+	anio_cosecha varchar (255),
+	anio_calificacion varchar (255),
+	dueño varchar (255),
+	variedad varchar (255),
+	estado varchar (255),
+	metodo_procesado varchar (255),
+	aroma varchar (255),
+	sabor varchar (255),
+	regusto varchar (255),
+	acidez varchar (255),
+	cuerpo varchar (255),
+	balance varchar (255),
+	uniformidad varchar (255),
+	taza_limpia varchar (255),
+	dulzor varchar (255),
+	general varchar (255),
+	defectos varchar (255),
+	puntos_totales varchar (255),
+	porcentaje_humedad varchar (255),
+	defecto_cat1 varchar (255),
+	Quakers varchar (255),
+	color varchar (255),
+	defecto_cat2 varchar (255),
+	vencimiento varchar (255),
+	certificacion_cuerpo varchar (255),
+	cerficiacion_direccion varchar (255),
+	certificacion_contacto varchar (255)
+
+)
+
+-------------------------------------------------------
+
+CREATE TABLE INT_CAFE (
+	[id] [int] NOT NULL,
+	Id_Pais int not null,
+	[Pais] [varchar](50) NULL,
+	Id_Region int not null,
+	[Region] [varchar](100) NULL,
+	Id_Variedad int not null,
+	Variedad varchar (100) null,
+	Id_Metodo_procesado int not null,
+	[Metodo_procesado] [varchar](100) NULL,
+	[Aroma] [decimal](4, 2) NULL,
+	[Sabor] [decimal](4, 2) NULL,
+	[Regusto] [decimal](4, 2) NULL,
+	[Acidez] [decimal](4, 2) NULL,
+	[Cuerpo] [decimal](4, 2) NULL,
+	[Balance] [decimal](4, 2) NULL,
+	[Uniformidad] [decimal](4, 2) NULL,
+	[Taza_limpia] [decimal](4, 2) NULL,
+	[Dulzor] [decimal](4, 2) NULL,
+	[General] [decimal](4, 2) NULL,
+	[Defecto] [decimal](4, 2) NULL,
+	[Puntos_totales] [decimal](4, 2) NULL,
+	[Porcentaje_humedad] [decimal](4, 2) NULL,
+	[Color] [varchar](50) NULL
+)
+
+------------------------------------------------------
+
+
+ALTER PROCEDURE SP_INT_CAFE
+
+AS
+BEGIN
+
+TRUNCATE TABLE INT_CAFE
+INSERT INTO INT_CAFE (id,Pais,Region,Variedad, Metodo_procesado,Aroma,sabor,Regusto,Acidez,Cuerpo,Balance,Uniformidad,Taza_limpia,Dulzor,General,Defecto,Puntos_totales,Porcentaje_humedad,Color)
+
+SELECT DISTINCT 
+	cast (id as int),
+	cast (TRIM (Pais) as varchar (50)),
+	cast (TRIM(region) as varchar (50)),
+	cast (TRIM (Variedad) as varchar (100)),
+	cast (TRIM (metodo_procesado) as varchar (50)),
+	cast (aroma as float),
+	cast (sabor as float),
+	cast (regusto as float),
+	cast (acidez as float),
+	cast (cuerpo as float),
+	cast (balance as float),
+	cast (uniformidad as float),
+	cast (taza_limpia as float),
+	cast (dulzor as float),
+	cast (general as float),
+	cast (Defectos as float),
+	cast (puntos_totales as float),
+	cast (porcentaje_humedad as float),
+	cast (TRIM (color) as varchar (20))
+FROM STG_CAFE
+
+END
+	
+-----------------------------------------------------------
+
+UPDATE INT_CAFE SET REGION = NULL WHERE Region like '%?'
+
+--------------------------------------------------------
+
+
+
+CREATE TABLE DIM_PAIS (
+	Id_Pais int primary key identity(1,1) not null,
+	Pais varchar (50) null
+)
+
+---------------------------------------------------------
+
+CREATE TABLE DIM_REGION (
+	Id_Region int primary key identity(1,1) not null,
+	Region varchar (100) null
+)
+
+-------------------------------------------------------
+
+CREATE TABLE DIM_METODO_PROCESADO (
+	Id_Metodo_procesado int primary key identity(1,1) not null,
+	Metodo_proceso varchar (100) null
+)
+
+--------------------------------------------------------
+
+CREATE TABLE DIM_VARIEDAD (
+	Id_variedad int primary key identity(1,1) not null,
+	Variedad varchar (100) null
+)
+
+----------------------------------------------------------
+
+CREATE TABLE [dbo].[FACT_ANALISIS](
+	[Id_analisis] [int] primary key identity (1,1) NOT NULL,
+	[Id_Pais] [int] NOT NULL,
+	[Id_Region] [int] NOT NULL,
+	[Id_Variedad] [int] NOT NULL,
+	[Id_Metodo_procesado] [int] NOT NULL,
+	[Aroma] [decimal](4, 2) NULL,
+	[Sabor] [decimal](4, 2) NULL,
+	[Regusto] [decimal](4, 2) NULL,
+	[Acidez] [decimal](4, 2) NULL,
+	[Cuerpo] [decimal](4, 2) NULL,
+	[Balance] [decimal](4, 2) NULL,
+	[Uniformidad] [decimal](4, 2) NULL,
+	[Taza_limpia] [decimal](4, 2) NULL,
+	[Dulzor] [decimal](4, 2) NULL,
+	[General] [decimal](4, 2) NULL,
+	[Defecto] [decimal](4, 2) NULL,
+	[Puntos_totales] [decimal](4, 2) NULL,
+	[Porcentaje_humedad] [decimal](4, 2) NULL,
+	[Color] [varchar](50) NULL,
+	foreign key (id_pais) references dim_pais (id_pais),
+	foreign key (id_region) references dim_region (id_region),
+	foreign key (id_variedad) references dim_variedad (id_variedad),
+	foreign key (id_metodo_procesado) references dim_metodo_procesado (id_metodo_procesado)
+)
+---------------------------------------------------------------
+
+
+CREATE PROCEDURE SP_CARGA_DIM_FACT
+
+AS
+BEGIN
+
+INSERT INTO DIM_Pais (Pais)
+SELECT DISTINCT C.Pais
+FROM INT_CAFE C
+LEFT JOIN DIM_Pais P ON C.Pais = P.Pais
+WHERE P.Id_Pais IS NULL;
+
+INSERT INTO DIM_Variedad (Variedad)
+SELECT DISTINCT C.Variedad
+FROM INT_CAFE C
+LEFT JOIN DIM_Variedad V ON C.Variedad = V.Variedad
+WHERE V.Id_variedad IS NULL;
+
+INSERT INTO DIM_REGION(Region)
+SELECT DISTINCT C.Region
+FROM INT_CAFE C
+LEFT JOIN DIM_REGION R ON C.Region = R.Region
+WHERE R.Id_Region IS NULL;
+
+INSERT INTO DIM_METODO_PROCESADO (Metodo_procesado)
+SELECT DISTINCT C.Metodo_procesado
+FROM INT_CAFE C
+LEFT JOIN DIM_METODO_PROCESADO MP ON C.metodo_procesado = MP.Metodo_procesado
+WHERE MP.Id_Metodo_procesado IS NULL;
+
+INSERT INTO FACT_ANALISIS (P.Id_Pais,
+	Id_Region,
+	Id_Variedad,
+	Id_Metodo_procesado,
+	Aroma,
+	Sabor,
+	Regusto,
+	Acidez,
+	Cuerpo,
+	Balance,
+	Uniformidad,
+	Taza_limpia,
+	Dulzor,
+	General,
+	Defecto,
+	Puntos_totales,
+	Porcentaje_humedad,
+	Color)
+SELECT
+
+	P.Id_Pais,
+	R.Id_Region,
+	V.Id_Variedad,
+	MP.Id_Metodo_procesado,
+	C.Aroma,
+	C.Sabor,
+	C.Regusto,
+	C.Acidez,
+	C.Cuerpo,
+	C.Balance,
+	C.Uniformidad,
+	C.Taza_limpia,
+	C.Dulzor,
+	C.General,
+	C.Defecto,
+	C.Puntos_totales,
+	C.Porcentaje_humedad,
+	C.Color
+FROM INT_CAFE C
+JOIN DIM_PAIS P ON C.Pais = P.Pais
+JOIN DIM_REGION R ON R.Region = C.Region
+JOIN DIM_VARIEDAD V ON V.Variedad = C.Variedad
+JOIN DIM_METODO_PROCESADO MP ON MP.Metodo_procesado = C.Metodo_procesado
+LEFT JOIN FACT_ANALISIS F ON
+	
+	F.Id_Region = R.Id_Region AND
+	F.Id_Variedad = V.Id_variedad AND
+	F.Id_Metodo_procesado = MP.Id_Metodo_procesado and
+	F.Aroma = c.Aroma and
+	F.Sabor = c.Sabor and
+	F.Regusto = c.Regusto and
+	F.Acidez = c.Acidez and
+	F.Cuerpo = c.Cuerpo and
+	F.Balance = c.Balance and
+	F.Uniformidad = c.Uniformidad and
+	F.Taza_limpia = c.Taza_limpia and
+	F.Dulzor = c.Dulzor and
+	F.General = c.General and
+	F.Defecto = c.Defecto and
+	F.Puntos_totales = c.Puntos_totales and
+	F.Porcentaje_humedad = c.Porcentaje_humedad and
+	F.Color = c.Color
+	WHERE F.Id_analisis IS NULL	   
+END
